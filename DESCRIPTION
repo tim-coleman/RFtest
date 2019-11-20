@@ -1,0 +1,10 @@
+Package: RFPerm
+Type: Package
+Title: Scalable and Efficient Hypothesis Tests for Random Forests
+Version: 0.1.0
+Date: 2019-09-03
+Author: Tim Coleman
+Maintainer: Tim Coleman <tsc35@pitt.edu>
+Description: This is an R implementation of the method proposed in "Scalable and Efficient Hypothesis Tests for Random Forests". Intended to function like an F-test for ensemble learners, that is both computationally efficient and provably valid in the sense of Type I error control. See also \url{http://arxiv.org/abs/1904.07830}.
+Depends: randomForest, ranger, dplyr, ggplot2, party
+License: GPL-2
