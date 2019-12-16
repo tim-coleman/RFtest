@@ -2,67 +2,39 @@
 \alias{summary.MSE_Test}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
-}
-\description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
-}
+Summarizes an MSE Test object.}
+
 \usage{
 summary.MSE_Test(obj)
 }
-%- maybe also 'usage' for other objects documented here.
-\arguments{
-  \item{obj}{
-%%     ~~Describe \code{obj} here~~
-}
-}
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
-\value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
-\references{
-%% ~put references to the literature/web site here ~
-}
 \author{
-%%  ~~who you are~~
-}
-\note{
-%%  ~~further notes~~
+Tim Coleman
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+N <- 1250
+Nvar <- 10
+N_test <- 150
+name_vec <- paste("X", 1:(2*Nvar), sep = "")
 
-## The function is currently defined as
-function (obj) 
-{
-    cat("Call: \n")
-    print(obj$call)
-    cat("\n")
-    cat("Statistic used:", obj$test_stat, "\n")
-    if (!is.null(obj$variables)) 
-        cat("Variables Tested:", obj$variables, "\n")
-    cat("Number of Test Points:", nrow(obj$test_pts), "\n")
-    cat("Base Learner(s):", obj$weak_learner, "\n")
-    cat("P-value:", obj$Pvalue, "\n")
-    if (!is.null(obj$Importance)) 
-        cat("SD Importance:", obj$Importance[1])
-  }
+# training data:
+X <- data.frame(replicate(Nvar, runif(N)),
+                replicate(Nvar, cut(runif(N), 3,
+                                      labels = as.character(1:3)))) %>%
+  mutate(Y = 5*(X3) + .5*X2^2 + ifelse(X6 > 10*X1*X8*X9, 1, 0) +  rnorm(N, sd = .05))
+names(X) <- c(name_vec, "Y")
+
+# some testing data:
+X.t1 <- data.frame(replicate(Nvar, runif(N_test)),
+                   replicate(Nvar, cut(runif(N_test), 3,
+                                       labels = as.character(1:3)))) %>%
+  mutate(Y = 5*(X3) + .5*X2^2 + ifelse(X6 > 10*X1*X8*X9, 1, 0) +  rnorm(N_test, sd = .05))
+names(X.t1) <- c(name_vec, "Y")
+
+M_no_test <- MSE_Test(X = X %>% dplyr::select(-Y), y = X$Y,
+                      base.learner = "rtree", NTest = 100, NTree = 500, B = 1000, var = c( "X5"),
+                      p = .85)
+
+summary(M_no_test)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }% use one of  RShowDoc("KEYWORDS")
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+

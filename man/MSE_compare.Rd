@@ -2,7 +2,7 @@
 \alias{MSE_compare}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Comparing two pre-trained models.
 }
 \description{
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
@@ -13,170 +13,90 @@ MSE_compare(m1, m2, X.test, y.test = NULL, B = 1000, return.preds = F, test_stat
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{m1}{
-%%     ~~Describe \code{m1} here~~
-}
+First model, usually generated with \code{bag.s}.}
   \item{m2}{
-%%     ~~Describe \code{m2} here~~
+Second model, usually generated with \code{bag.s}.
 }
-  \item{X.test}{
-%%     ~~Describe \code{X.test} here~~
+ \item{X.test}{
+  Covariates of the test set with which the MSE is calculated.
 }
   \item{y.test}{
-%%     ~~Describe \code{y.test} here~~
+  Responses in the test set with which the MSE is calculated.
 }
-  \item{B}{
-%%     ~~Describe \code{B} here~~
+\item{B}{ Number of permutations to use in the test. Note: this is the number of times the trees are permuted between forests to generate the permutation distribution, not the number of times each feature is permuted.
 }
   \item{return.preds}{
-%%     ~~Describe \code{return.preds} here~~
+  Logical. Should model predictions be returned?
 }
   \item{test_stat}{
-%%     ~~Describe \code{test_stat} here~~
+  Not currently useful. 
 }
 }
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
-\value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
-\references{
-%% ~put references to the literature/web site here ~
+
+\value{ An object of the S4 class \code{MSE_Test}
+\item{originalStat}{A named vector of two quantities, \code{Original MSE}, which corresponds to the MSE of the full model and \code{Permuted MSE} which corresponds to MSE of the reduced model.}
+\item{PermDiffs}{A vector of the differences in permuted MSEs - these make up the permutation distribution.}
+\item{Importance}{A scalar of the SD Importance Z-score.}
+\item{Pvalue}{The p-value for the hypothesis tested.}
+\item{test_pts}{The test data frame.}
+\item{weak_learner}{The base models used in each ensemble - one for model 1 and one for model 2.}
+\item{model_original}{Model 1}
+\item{model_permuted}{Model 2}
+\item{test_stat}{Which test statistic is used. Will always be \code{"MSE"} for this function.}
 }
 \author{
-%%  ~~who you are~~
-}
-\note{
-%%  ~~further notes~~
+Tim Coleman
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+N <- 1250
+Nvar <- 10
+N_test <- 150
+name_vec <- paste("X", 1:(2*Nvar), sep = "")
 
-## The function is currently defined as
-function (m1, m2, X.test, y.test = NULL, B = 1000, return.preds = F, 
-    test_stat = if (is.null(y.test)) "KS" else "MSE") 
-{
-    if (length(m1) != length(m2)) {
-        warning("Models should have the same number of base models")
-    }
-    pred_f <- function(model) {
-        if (class(model) \%in\% c("bagged_rtree", "bagged_ctree", 
-            "bagged_rpart")) {
-            P <- data.frame(lapply(model, FUN = function(x) predict(x, 
-                newdata = X.test)))
-        }
-        else if (class(model) \%in\% c("bagged_rtree_ranger", "bagged_ctree_ranger")) {
-            P <- data.frame(lapply(model, FUN = function(x) {
-                P <- predict(x, data = X.test)
-                P["predictions"]
-            }))
-        }
-        else {
-            if (is.null(y.test)) {
-                y.dummy <- rep(0, nrow(X.test))
-            }
-            else {
-                y.dummy <- y.test
-            }
-            form.resp <- as.formula("y~.")
-            P <- data.frame(lapply(model, predict, newx = model.matrix(form.resp, 
-                data.frame(X.test, y = y.test))))
-        }
-        P
-    }
-    P1 <- pred_f(m1)
-    P2 <- pred_f(m2)
-    nt1 <- length(m1)
-    nt2 <- length(m2)
-    Pool <- cbind(P1, P2)
-    if (class(test_stat) == "character") {
-        if (test_stat == "MSE") {
-            f <- function(test, p1, p2) {
-                MSE1 <- mean((p1 - test)^2)
-                MSE2 <- mean((p2 - test)^2)
-                return(c(`Model 1 MSE` = MSE1, `Model 2 MSE` = MSE2))
-            }
-        }
-        else if (test_stat == "KS") {
-            f <- function(test, p1, p2) {
-                stat <- max(abs(p1 - p2))
-                return(stat)
-            }
-        }
-        else if (test_stat == "diff") {
-            f <- function(test, p1, p2) {
-                stat <- mean(p1 - p2)
-                return(stat)
-            }
-        }
-    }
-    else {
-        f <- test_stat
-    }
-    Pred_1 <- apply(P1, FUN = mean, MARGIN = 1)
-    Pred_2 <- apply(P2, FUN = mean, MARGIN = 1)
-    if (is.null(y.test)) {
-        y.test <- rep(0, nrow(X.test))
-    }
-    TS0 <- f(y.test, Pred_1, Pred_2)
-    TS_temp <- TS0
-    if (class(test_stat) == "character") {
-        if (test_stat == "MSE") 
-            TS0 <- TS0[1] - TS0[2]
-    }
-    perm_stats <- c()
-    for (i in 1:B) {
-        samps <- sample(1:ncol(Pool), nt1, replace = F)
-        P_t <- Pool[, samps]
-        PR_t <- Pool[, -samps]
-        Pred_t <- apply(P_t, FUN = mean, MARGIN = 1)
-        Pred_R_t <- apply(PR_t, FUN = mean, MARGIN = 1)
-        if (class(test_stat) == "character") {
-            if (test_stat == "MSE") {
-                temp <- f(y.test, Pred_R_t, Pred_t)
-                perm_stats[i] <- temp[1] - temp[2]
-            }
-            else {
-                temp <- NULL
-                perm_stats[i] <- f(y.test, Pred_R_t, Pred_t)
-            }
-        }
-        else {
-            perm_stats[i] <- f(y.test, Pred_R_t, Pred_t)
-        }
-    }
-    if (test_stat == "diff") {
-        Pvals <- c(`Full Model P` = mean(c(abs(TS0) < abs(perm_stats), 
-            1)))
-    }
-    else {
-        Pvals <- c(`Full Model P` = mean(c(TS0 < perm_stats, 
-            1)))
-    }
-    sdimp <- (TS0 - mean(perm_stats))/sd(perm_stats)
-    zimp <- qnorm(1 - pnorm(sdimp))
-    importances <- c(`Standard Deviation Importance` = sdimp, 
-        `Standard Normal Importance` = zimp)
-    result <- list(variables = NULL, originalStat = TS_temp, 
-        PermDiffs = perm_stats, Importance = importances, Pvalue = Pvals, 
-        test_pts = X.test, weak_learner = c(class(m1), class(m2)), 
-        model_original = m1, model_permuted = m2, test_stat = test_stat, 
-        call = match.call())
-    class(result) <- "MSE_Test"
-    result
-  }
+# training data:
+X <- data.frame(replicate(Nvar, runif(N)),
+                replicate(Nvar, cut(runif(N), 3,
+                                      labels = as.character(1:3)))) %>%
+  mutate(Y = 5*(X3) + .5*X2^2 + ifelse(X6 > 10*X1*X8*X9, 1, 0) +  rnorm(N, sd = .05))
+names(X) <- c(name_vec, "Y")
+
+# some testing data:
+X.t1 <- data.frame(replicate(Nvar, runif(N_test)),
+                   replicate(Nvar, cut(runif(N_test), 3,
+                                       labels = as.character(1:3)))) %>%
+  mutate(Y = 5*(X3) + .5*X2^2 + ifelse(X6 > 10*X1*X8*X9, 1, 0) +  rnorm(N_test, sd = .05))
+names(X.t1) <- c(name_vec, "Y")
+
+m_rpart <- bag.s(X = X %>% select(-Y), y = X %>% select(Y),
+                       base.learner = "rpart", ntree = 100, k = 100^.85, mtry = 10, form = Y~., ranger = F)
+m_ctree <- bag.s(X = X %>% select(-Y), y = X %>% select(Y),
+                 base.learner = "ctree", ntree = 100, k = 100^.85, mtry = 10, form = Y~., ranger = F)
+m_ctree_ranger <- bag.s(X = X %>% select(-Y), y = X %>% select(Y),
+                    base.learner = "ctree", ntree = 100, k = 100^.85, mtry = 10, form = Y~., ranger = T)
+m_rtree <- bag.s(X = X %>% select(-Y), y = X %>% select(Y),
+                 base.learner = "rtree", ntree = 100, k = 100^.85, mtry = 10, form = Y~., ranger = F)
+m_rtree_ranger <- bag.s(X = X %>% select(-Y), y = X %>% select(Y),
+                        base.learner = "rtree", ntree = 100, k = 100^.85, mtry = 10, ranger = T)
+m_glm  <- bag.s(X = X %>% select(-Y), y = X %>% select(Y),
+                                 base.learner = "lm", ntree = 100, k = 100^.85, mtry = 10, ranger = F)
+
+# Feature importance usage
+X_pm <- X[sample(nrow(X), replace = F),which(names(X) != "Y")]
+m_reduced <- bag.s(X = X_pm, y = X %>% select(Y),
+                  base.learner = "rpart", ntree = 100, k = 100^.85, mtry = 10)
+m_full <- bag.s(X = X %>% select(-Y), y = X %>% select(Y),
+                base.learner = "rpart", ntree = 100, k = 100^.85, mtry = 10)
+full_vs_red <- MSE_compare(m_reduced, m_full, X.test = X.t1, y.test = X.t1$Y)
+
+p1 <- data.frame(lapply(m_ctree_ranger, FUN = function(x) predict(x, data = X.t1)["predictions"]))
+p2 <- data.frame(lapply(m_rpart, FUN = function(x) predict(x, newdata = X.t1)))
+p_glm <- data.frame(lapply(m_glm, predict,
+                           newx = model.matrix(y~., data = data.frame(X.t1, "y" = rep(0, N_test)))))
+
+MSE_comp_rp_ct <- MSE_compare(m_rpart, m_ctree, X.test = X.t1, y.test = X.t1$Y)
+MSE_comp_rp_glm <- MSE_compare(m_rpart, m_glm, X.test = X.t1, y.test = X.t1$Y)
+MSE_comp_rtr_glm <- MSE_compare(m_rtree_ranger, m_glm, X.test = X.t1)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

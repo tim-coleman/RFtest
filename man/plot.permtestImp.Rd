@@ -2,122 +2,45 @@
 \alias{plot.permtestImp}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
-}
+Plotting a permutation test for all features.}
 \description{
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
 plot.permtestImp(obj, ImpType = "SDImp", col_blind = F)
 }
-%- maybe also 'usage' for other objects documented here.
-\arguments{
-  \item{obj}{
-%%     ~~Describe \code{obj} here~~
-}
-  \item{ImpType}{
-%%     ~~Describe \code{ImpType} here~~
-}
-  \item{col_blind}{
-%%     ~~Describe \code{col_blind} here~~
-}
-}
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
-\value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
-\references{
-%% ~put references to the literature/web site here ~
-}
-\author{
-%%  ~~who you are~~
-}
-\note{
-%%  ~~further notes~~
-}
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+N <- 1250
+Nvar <- 10
+N_test <- 150
+name_vec <- paste("X", 1:(2*Nvar), sep = "")
 
-## The function is currently defined as
-function (obj, ImpType = "SDImp", col_blind = F) 
-{
-    obj <- obj$Importance_Table
-    title.perm <- "Permutation Test Importance Measures "
-    if (ImpType == "SDImp") {
-        df <- data.frame(Variable = colnames(obj), Importance = unlist(obj[1, 
-            ], use.names = F), Pvalues = unlist(obj[3, ], use.names = F))
-        df <- df \%>\% mutate(Variable = reorder(Variable, Importance)) \%>\% 
-            mutate(signifcode = cut(Pvalues, breaks = c(0, 0.01, 
-                0.05, 0.1, 1), labels = c(".01", ".05", ".1", 
-                "Not Significant")))
-        subtitle <- "Standard Deviation Importance"
-    }
-    else {
-        df <- data.frame(Variable = colnames(obj), Importance = unlist(obj[2, 
-            ], use.names = F), Pvalues = unlist(obj[3, ], use.names = F))
-        df <- df \%>\% mutate(Variable = reorder(Variable, Importance)) \%>\% 
-            mutate(signifcode = cut(Pvalues, breaks = c(0, 0.01, 
-                0.05, 0.1, 1), labels = c(".01", ".05", ".1", 
-                "Not Significant")))
-        subtitle <- "MSE Importance"
-    }
-    if (nrow(df) > 15) {
-        df <- (df \%>\% arrange(desc(Importance)))[1:15, ]
-    }
-    if (!col_blind) {
-        imp_palette <- colorRampPalette(c("blue", "grey65", "aquamarine3"))
-        n_col <- length(unique(df[["signifcode"]]))
-        g <- ggplot(aes(x = Variable), data = df) + geom_point(aes(y = Importance, 
-            col = signifcode), size = 3.5) + coord_flip() + theme_classic() + 
-            ggtitle(title.perm) + ylab(subtitle) + scale_colour_manual(values = imp_palette(n_col), 
-            name = "Significance \nLevel") + theme(plot.title = element_text(size = 21, 
-            hjust = 0.5), axis.title = element_text(size = 15), 
-            axis.text.y = element_text(size = 18), axis.text.x = element_text(size = 18), 
-            legend.background = element_rect(colour = "black", 
-                fill = "white"), legend.text = element_text(size = 12), 
-            legend.title = element_text(size = 14, hjust = 0.5), 
-            legend.spacing.y = unit(0.3, "cm"), plot.subtitle = element_text(hjust = 0.5), 
-            panel.border = element_rect(colour = "black", fill = NA, 
-                size = 1), plot.background = element_rect(fill = "white"), 
-            panel.background = element_rect(fill = "white"), 
-            panel.grid.major.y = element_line(colour = "gray", 
-                linetype = 2))
-    }
-    else {
-        g <- ggplot(aes(x = Variable), data = df) + geom_point(aes(y = Importance, 
-            shape = signifcode), fill = "#6FD6FF", size = 3.5) + 
-            coord_flip() + theme_classic() + ggtitle(title.perm) + 
-            ylab(subtitle) + scale_shape_discrete(name = "Significance \nLevel") + 
-            theme(plot.title = element_text(size = 21, hjust = 0.5), 
-                axis.title = element_text(size = 15), axis.text.y = element_text(size = 18), 
-                axis.text.x = element_text(size = 18), legend.background = element_rect(colour = "black", 
-                  fill = "white"), legend.text = element_text(size = 12), 
-                legend.title = element_text(size = 14, hjust = 0.5), 
-                legend.spacing.y = unit(0.3, "cm"), plot.subtitle = element_text(hjust = 0.5), 
-                panel.border = element_rect(colour = "black", 
-                  fill = NA, size = 1), plot.background = element_rect(fill = "white"), 
-                panel.background = element_rect(fill = "white"), 
-                panel.grid.major.y = element_line(colour = "gray", 
-                  linetype = 2))
-    }
-    plot(g)
-  }
+# training data:
+X <- data.frame(replicate(Nvar, runif(N)),
+                replicate(Nvar, cut(runif(N), 3,
+                                      labels = as.character(1:3)))) \%>\%
+  mutate(Y = 5*(X3) + .5*X2^2 + ifelse(X6 > 10*X1*X8*X9, 1, 0) +  rnorm(N, sd = .05))
+names(X) <- c(name_vec, "Y")
+
+# some testing data:
+X.t1 <- data.frame(replicate(Nvar, runif(N_test)),
+                   replicate(Nvar, cut(runif(N_test), 3,
+                                       labels = as.character(1:3)))) \%>\%
+  mutate(Y = 5*(X3) + .5*X2^2 + ifelse(X6 > 10*X1*X8*X9, 1, 0) +  rnorm(N_test, sd = .05))
+names(X.t1) <- c(name_vec, "Y")
+
+pm1 <- permtestImp(X = X %>% dplyr::select(-Y), y = X$Y, resp = "y", single_forest = F,
+                   base.learner = "rtree", mtry = 5, NTest = 30, Nbtree = 10, B = 1000,
+                   p = .875, verbose = T)
+
+
+plot(pm1)
+
+pm.null <- permtestImp(X = X %>% dplyr::select(-Y), y = rnorm(2500), resp = "y", single_forest = F,
+                       base.learner = "rtree", mtry = 3, NTest = 100, Nbtree = 100, B = 1000,
+                       p = .95, verbose = T)
+
+plot(pm.null)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }% use one of  RShowDoc("KEYWORDS")
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+
