@@ -3,7 +3,7 @@
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Comparing Test MSE's for Full and Reduced Models}
 %%  ~~function to do ... ~~
-}
+
 \description{
 Implementation of a test which permutes trees between two forests, one with \code{var} left intact, and one with \code{var} replaced with a permuted version of itself, where the permutation is done row-wise.
 }
@@ -37,8 +37,6 @@ MSE_Test(formula, data, ...)
 }
   \item{mtry}{ \code{"mtry"} parameter associated with random forest models.
   }
-
-
   \item{var}{
   Variable of interest. Should correspond to the name of a variable in both \code{X} and \code{X.test}.
 }
@@ -67,11 +65,7 @@ MSE_Test(formula, data, ...)
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{ An object of the S4 class \code{MSE_Test}
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+
 \item{var}{ Variable whose importance was tested, a name of a column in \code{X}.}
 \item{originalStat}{A named vector of two quantities, \code{Original MSE}, which corresponds to the MSE of the full model and \code{Permuted MSE} which corresponds to MSE of the reduced model.}
 \item{PermDiffs}{A vector of the differences in permuted MSEs - these make up the permutation distribution.}
@@ -83,8 +77,7 @@ MSE_Test(formula, data, ...)
 \item{model_permuted}{The reduced model ensemble - list of base learners, like in \code{bag.s}.}
 \item{test_stat}{Which test statistic is used. Will always be \code{"MSE"} for this function.}
 }
-\references{
-}
+
 \author{
 Tim Coleman
 }
