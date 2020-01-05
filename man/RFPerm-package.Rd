@@ -13,7 +13,7 @@
 The DESCRIPTION file:
 \packageDESCRIPTION{RFPerm}
 \packageIndices{RFPerm}
-~~ An overview of how to use the package, including the most important functions ~~
+Most of the functionality comes in the \code{MSE_Test} file, which will conduct an F-test for a certain subset of variables. To run marginal F-tests for each variable, \code{f_holdoutRF} (efficient) or \code{permtestImp} (brute force) should be used.
 }
 \author{
 \packageAuthor{RFPerm}
@@ -24,10 +24,4 @@ Maintainer: \packageMaintainer{RFPerm}
 
 }
 \keyword{ package }
-\seealso{
-~~ Optional links to other man pages, e.g. ~~
-~~ \code{\link[<pkg>:<pkg>-package]{<pkg>}} ~~
-}
-\examples{
-~~ simple examples of the most important functions ~~
-}
+
