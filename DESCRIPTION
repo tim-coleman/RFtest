@@ -1,4 +1,4 @@
-Package: RFPerm
+Package: RFTest
 Type: Package
 Title: Scalable and Efficient Hypothesis Tests for Random Forests
 Version: 0.1.0
