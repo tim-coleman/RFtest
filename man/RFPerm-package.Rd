@@ -1,24 +1,24 @@
-\name{RFPerm-package}
-\alias{RFPerm-package}
-\alias{RFPerm}
+\name{RFTest-package}
+\alias{RFTest-package}
+\alias{RFTest}
 \docType{package}
 \title{
-\packageTitle{RFPerm}
+\packageTitle{RFTest}
 }
 \description{
-\packageDescription{RFPerm}
+\packageDescription{RFTest}
 }
 \details{
 
 The DESCRIPTION file:
-\packageDESCRIPTION{RFPerm}
-\packageIndices{RFPerm}
+\packageDESCRIPTION{RFTest}
+\packageIndices{RFTest}
 Most of the functionality comes in the \code{MSE_Test} file, which will conduct an F-test for a certain subset of variables. To run marginal F-tests for each variable, \code{f_holdoutRF} (efficient) or \code{permtestImp} (brute force) should be used.
 }
 \author{
-\packageAuthor{RFPerm}
+\packageAuthor{RFTest}
 
-Maintainer: \packageMaintainer{RFPerm}
+Maintainer: \packageMaintainer{RFTest}
 }
 \references{
 
