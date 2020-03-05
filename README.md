@@ -4,4 +4,4 @@ F-tests for random forests that are scalable and efficient. This package provide
 ![Importance & Hypothesis Testing Outputs](Plot_Output_Examples.JPG)
 
 
-See the original manuscript, https://arxiv.org/pdf/1904.07830.pdf. 
+See the original manuscript for details of/theory behind the method, https://arxiv.org/pdf/1904.07830.pdf. 
